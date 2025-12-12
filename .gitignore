@@ -53,3 +53,38 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# STM32CubeIDE build folders
+/Debug/
+/Release/
+/build/
+
+# Auto-generated IDE files
+.metadata/
+.settings/
+*.launch
+
+# Compiled binaries
+*.elf
+*.bin
+*.hex
+*.map
+
+# Object files
+*.o
+*.d
+*.su
+
+# Backup / temp
+*.swp
+*.bak
+*.tmp
+
+# Core dumps
+core
+
+# CubeMX generated intermediate files
+*.ioc_backup
+
+# Logs
+*.log
