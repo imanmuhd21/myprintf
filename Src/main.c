@@ -30,7 +30,7 @@ int main(void)
     myprintf_init();
 	/* Loop forever */
 	while(1){
-		myprintf("iman%d", 21);
+		myprintf("Testing%d", 21);
 		systick_delayS(1);
 	}
 }
