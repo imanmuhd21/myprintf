@@ -25,17 +25,6 @@ void enable_int(void){
 	USART2->CR1 |= (1UL << 13);
 }
 
-void enable_intrx(void){
-	USART2->CR1 &= ~(1UL << 13);
-	USART2->CR1 |= (1UL << 5);
-	USART2->CR1 |= (1UL << 13);
-}
-
-void disable_intrx(void){
-	USART2->CR1 &= ~(1UL << 13);
-	USART2->CR1 &= ~(1UL << 5);
-	USART2->CR1 |= (1UL << 13);
-}
 void USART2_IRQHandler(void){
 	if (USART2->SR & (1UL << 7)){
 		if (empty_ring_buff(tx_buff)){
@@ -334,3 +323,4 @@ void uart_putchar_integer(int n){
 		uart2_putchar_int((char)buff[i]);
 	}
 }
+
