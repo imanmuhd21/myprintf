@@ -8,19 +8,9 @@
 #include "usart.h"
 #include "ring_buffer.h"
 
-static uint8_t tx_rb_mem[RINGBUFFER_OBJ_SIZE];
-static uint8_t rx_rb_mem[RINGBUFFER_OBJ_SIZE];
-
 static uint8_t tx_array[16];
 
 static ringbuffer *tx_buff;
-
-static uint8_t rx_array[16];
-
-static ringbuffer *rx_buff;
-
-volatile bool rx_event = false;
-volatile uint32_t usart2_isr_hit = 0;
 
 void disable_int(void){
 	USART2->CR1 &= ~(1UL << 13);
@@ -61,23 +51,6 @@ void USART2_IRQHandler(void){
 		}
 
 		disable_int();
-	}
-
-	if (USART2->SR & (1UL << 5)){
-
-		usart2_isr_hit++;
-		if (full_ring_buff(rx_buff)){
-			while(1);
-		}
-
-		if(!(full_ring_buff(rx_buff))){
-			char wharw = USART2->DR;
-			put_ring_buff(rx_buff, wharw);
-
-			rx_event = true;
-		}
-
-
 	}
 }
 
@@ -268,7 +241,7 @@ uint32_t compute_uart_baudrate(uint32_t PeriphClk, uint32_t Baudrate){
 
 void uart_set_baudrate115200(USART_TypeDef *USARTx, uint32_t PeriphClk){
 
-	USARTx->BRR = 0x008B;
+	USARTx->BRR = compute_uart_baudrate(PeriphClk, 115200UL);
 
 }
 
@@ -304,12 +277,8 @@ void uart_txint(void){
 	USART2->CR1 &= ~(1UL << 13);
 	USART2->CR1 |= (1UL << 3);
 	USART2->CR1 |= (1UL << 13);
-	if (sizeof(tx_rb_mem) < ringbuffer_obj_size()) {
-	        while (1); // configuration error
-	    }
 
-	init_ring_buff(tx_rb_mem, tx_array, sizeof(tx_array));
-	tx_buff = mem_to_ringbuff(tx_rb_mem);
+	tx_buff = create_ring_buff(tx_array, sizeof(tx_array));
 
 	NVIC_EnableIRQ(USART2_IRQn);
 }
@@ -365,45 +334,3 @@ void uart_putchar_integer(int n){
 		uart2_putchar_int((char)buff[i]);
 	}
 }
-
-
-
-/*Receiving function*/
-
-void uart2rx_int(void){
-	USART2->CR1 &= ~(1UL << 13);
-	USART2->CR1 |= (1UL << 2);
-	USART2->CR1 |= (1UL << 13);
-	USART2->CR1 |= (1UL << 5);
-	if (sizeof(rx_rb_mem) < ringbuffer_obj_size()) {
-		        while (1); // configuration error
-		    }
-
-	init_ring_buff(rx_rb_mem, rx_array, sizeof(rx_array));
-	rx_buff = mem_to_ringbuff(rx_rb_mem);
-
-}
-
-void uart2_read_int(void){
-
-	USART2->CR1 |= (1UL << 5);
-	if (rx_event){
-		rx_event = false;
-		char tharw = get_ring_buff(rx_buff);
-		uart2_putchar_int(tharw);
-	}
-
-
-
-
-
-
-
-}
-
-char uart2_read(void){
-	while (!(USART2->SR & (1UL << 5)));
-
-	return USART2->DR;
-}
-
