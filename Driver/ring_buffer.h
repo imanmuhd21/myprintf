@@ -17,13 +17,7 @@
 
 typedef struct ringbuffer ringbuffer;
 
-#define RINGBUFFER_OBJ_SIZE 32
-
-void init_ring_buff(void *mem, uint8_t *array, uint8_t size);
-
-size_t ringbuffer_obj_size(void);
-
-ringbuffer *mem_to_ringbuff(void *mem);
+ringbuffer *create_ring_buff(uint8_t *array, uint8_t size);
 
 void put_ring_buff(ringbuffer *rb, uint8_t data);
 
@@ -35,9 +29,5 @@ bool empty_ring_buff(ringbuffer * rb);
 
 bool full_ring_buff(ringbuffer *rb);
 
-
-bool full_read_ringbuff(ringbuffer *rb);
-
-uint8_t predict_ring_buff(ringbuffer *rb);
-
 #endif /* RING_BUFFER_H_ */
+
