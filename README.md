@@ -1,32 +1,78 @@
-Below is a complete, unified GitHub project description, rewritten cleanly and professionally, fully based on all the details you provided, including the first-character kick-start TX design, ring buffer behavior, layering, and SysTick usage.
-This is suitable for a README, technical review, or portfolio project.
+Custom Lightweight printf() (Bare-Metal STM32F401RE)
 
-Custom Lightweight printf() Implementation (Bare-Metal STM32F401RE)
+A from-scratch, bare-metal printf()-like implementation for the STM32F401RE (ARM Cortex-M4), featuring interrupt-driven USART transmission, a ring buffer, and zero dependency on HAL / LL or third-party drivers.
 
-This project is a custom lightweight printf()-like implementation developed entirely from scratch for the STM32F401RE (ARM Cortex-M4) microcontroller. It is written in bare-metal C, does not rely on HAL, LL, or any third-party drivers, and uses only CMSIS register-level access.
+This project focuses on low-level firmware design, direct register manipulation, and clean driver layering, closely resembling how production-grade embedded drivers are written.
 
-The implementation supports the format specifiers %d, %s, and %c, and transmits data over USART using an interrupt-driven design combined with a 16-byte ring buffer.
+✨ Highlights
 
-Project Architecture
+✅ Bare-metal firmware (CMSIS only)
 
-The firmware is organized into clear layers to separate responsibilities and improve maintainability.
+✅ Custom GPIO and USART drivers
 
-1. Driver Layer (Hardware Control)
+✅ Lightweight printf() implementation
+
+✅ Supports %d, %s, %c
+
+✅ Interrupt-driven USART TX (TXE)
+
+✅ First-character kick-start transmission design
+
+✅ 16-byte ring buffer
+
+✅ Layered architecture (Driver → Buffer → Application)
+
+✅ Minimal main.c usage
+
+✅ Designed for learning real embedded driver behavior
+
+🧠 Design Philosophy
+
+Instead of polling or blocking I/O, this project uses an interrupt-driven UART transmission model where:
+
+The CPU writes only the first character to the USART
+
+All subsequent characters are handled by the USART ISR
+
+A ring buffer decouples the application from the hardware
+
+The CPU remains free after enqueueing data
+
+This mirrors how professional embedded serial drivers are implemented.
+
+🏗️ Project Architecture
+
+The firmware is organized into clear layers, each with a single responsibility.
+
+Application Layer
+ └── myprintf.c / myprintf.h
+
+Buffer Layer
+ └── ringbuffer.c / ringbuffer.h
+
+Driver Layer
+ ├── usart.c / usart.h
+ └── gpio.c  / gpio.h
+
+Utility
+ └── systick.c / systick.h
+
+🔌 Driver Layer
 GPIO Driver (gpio.c / gpio.h)
 
-Configures GPIO pins and alternate functions for USART operation
+Configures GPIO pins and alternate functions
 
-Fully register-level implementation
+Register-level implementation
 
-No vendor abstraction layers
+Used for USART pin mapping
 
-USART Driver (usart.c / usart.h)
+USART Driver (usart.c / usart.h) ⭐ Core of the Project
 
-This is the core of the project and handles all low-level serial communication, including:
+Handles all low-level serial communication, including:
 
 USART peripheral configuration
 
-TX interrupt (TXEIE) handling
+TXE interrupt enabling/disabling
 
 Writing bytes into the TDR register
 
@@ -36,105 +82,106 @@ String and character transmission
 
 Character reception
 
-Interaction with the ring buffer
+Safe interaction with the ring buffer
 
-Interrupt-safe transmission control
+⚡ Interrupt-Driven TX Design (Key Highlight)
 
-Interrupt-Driven TX Design (Key Feature)
+This project uses a first-character kick-start mechanism for USART transmission.
 
-The USART TX implementation uses a first-character kick-start mechanism:
+How It Works
+1️⃣ First Character (Kick-start)
 
-Only the first character is written by the CPU into both:
+TXE interrupt is temporarily disabled
 
-the ring buffer
+CPU pushes the character into the ring buffer
 
-and TDR
+If the buffer was empty:
 
-Writing to TDR clears TXE, starting the hardware transmission
+The same character is also written into TDR
 
-TXEIE is enabled, allowing the USART to generate interrupts
-
-All subsequent characters are fetched only by the ISR from the ring buffer
-
-After the first character, the CPU’s only responsibility is buffering data
-
-This design ensures:
-
-No polling
-
-Minimal CPU involvement
-
-Fully asynchronous transmission
-
-TX Flow Summary
-
-CPU disables TXE interrupt
-
-CPU receives a character
-
-Character is written into the ring buffer
-
-If the buffer was empty before insertion, the same character is also written into TDR
+This clears TXE and starts transmission
 
 TXE interrupt is re-enabled
 
-When TXE becomes set, the ISR:
+2️⃣ Subsequent Characters
 
-fetches the next byte from the ring buffer
+CPU only pushes characters into the ring buffer
 
-writes it into TDR
+CPU never writes to TDR again
 
-continues until the buffer is empty
+3️⃣ ISR-Controlled Transmission
 
-2. Buffer Layer
+When hardware finishes shifting data:
+
+TXE = 1
+
+Since TXEIE is enabled:
+
+USART interrupt triggers
+
+ISR:
+
+Fetches next byte from the ring buffer
+
+Writes it into TDR
+
+Continues until the buffer is empty
+
+Why This Matters
+
+✔ No polling
+
+✔ Minimal CPU usage
+
+✔ Deterministic TX behavior
+
+✔ Clean ISR ↔ main synchronization
+
+🔄 Buffer Layer
 Ring Buffer (ringbuffer.c / ringbuffer.h)
 
 Implements a 16-byte circular buffer
 
 Manages:
 
-head and tail indexing
+head / tail movement
 
 full and empty conditions
 
-controlled read/write access
-
-APIs such as:
+Provides controlled APIs:
 
 put_ring_buff()
 
 get_ring_buff()
 
-Acts as a safe communication bridge between:
+Acts as the bridge between:
 
-main application code
+application code
 
-USART interrupt service routine
+USART ISR
 
-This layer fully controls how data is queued and drained during transmission.
+🖨️ Custom printf() Layer
+myprintf.c / myprintf.h
 
-3. Software / Application Layer
-Custom printf() (myprintf.c / myprintf.h)
+Lightweight printf() using variadic arguments
 
-Implements a lightweight printf() using variadic arguments
+Parses format strings character-by-character
 
-Parses the format string character-by-character
+Supports:
 
-On encountering %, checks for:
-
-%d → integer conversion and transmission
+%d → integer conversion (handled in USART driver)
 
 %s → string transmission
 
 %c → single character transmission
 
-Non-format characters are transmitted directly as bytes
+Non-format characters are transmitted directly
 
-Fully reuses USART driver functionality
+Fully reuses USART driver APIs
 
 Initialization Abstraction
 
-myprintf_init() performs all hardware setup, including:
+myprintf_init() performs all hardware setup:
 
 GPIO configuration
 
@@ -142,24 +189,21 @@ USART configuration
 
 Alternate function mapping
 
-Interrupt enabling
+TX interrupt enabling
 
-This allows main.c to remain minimal and clean.
+This keeps main.c clean and minimal.
 
-4. Timing Utility
-SysTick (systick.c / systick.h)
+⏱️ SysTick Delay Utility
+systick.c / systick.h
 
-Uses the Cortex-M SysTick timer
+Uses Cortex-M SysTick
 
-Provides second-based blocking delays
+Provides blocking, second-based delays
 
-Example:
+systick_delayS(2); // 2 seconds
+systick_delayS(3); // 3 seconds
 
-systick_delayS(2) → 2-second delay
-
-systick_delayS(3) → 3-second delay
-
-Example Usage
+🚀 Example Usage
 int main(void)
 {
     myprintf_init();
@@ -172,37 +216,33 @@ int main(void)
 }
 
 
-All peripheral configuration is handled internally by myprintf_init().
-After initialization, the superloop only focuses on application logic.
+All configuration is handled internally.
+The superloop focuses only on application logic.
 
-Key Features
+🧪 What This Project Demonstrates
 
-Bare-metal STM32 firmware (no HAL / LL)
+Direct register-level programming
 
-Custom GPIO and USART drivers
+Interrupt-driven peripheral design
 
-Interrupt-driven USART TX using TXE
+Ring buffer implementation
 
-First-character kick-start transmission design
+Variadic function handling
 
-Ring buffer–based asynchronous communication
+Layered firmware architecture
 
-Lightweight printf() with variadic arguments
+Realistic embedded driver patterns
 
-Clear layered architecture
+📌 Target Platform
 
-Designed for learning and demonstrating low-level firmware development
+MCU: STM32F401RE
 
-This project demonstrates direct register manipulation, interrupt handling, buffer management, and formatted output implementation on ARM Cortex-M, closely resembling real-world embedded driver design while remaining lightweight and educational.
+Core: ARM Cortex-M4
 
-If you want, I can:
+Language: C
 
-Shorten this into a compact README
+Environment: Bare-metal (CMSIS only)
 
-Rewrite it for a resume or interview explanation
+📚 Motivation
 
-Add a TX flow diagram description
-
-Polish it for open-source presentation
-
-Just tell me.
+This project was built to deeply understand how printf() works in embedded systems, how UART drivers are designed internally, and how interrupt-driven communication is implemented without abstraction layers.
