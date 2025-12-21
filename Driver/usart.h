@@ -61,12 +61,5 @@ void usart_init (USART_TypeDef *USARTx, GPIO_TypeDef *GPIOx, uint8_t PIN, uint8_
 void uart2_putcharpoll(char charw);
 
 
-/*Receive function*/
-
-void uart2rx_int(void);
-
-void uart2_read_int(void);
-
-char uart2_read(void);
-
 #endif /* USART_H_ */
+
