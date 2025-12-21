@@ -17,7 +17,7 @@ struct ringbuffer{
 };
 
 
-uint8_t *create_ring_buff(uint8_t *array, uint8_t size){
+ringbuffer *create_ring_buff(uint8_t *array, uint8_t size){
 
 	static ringbuffer *rb;
 	rb->buffer = array;
@@ -77,6 +77,7 @@ bool full_ring_buff(ringbuffer *rb){
 	return headadd == rb->tail;
 
 }
+
 
 
 
