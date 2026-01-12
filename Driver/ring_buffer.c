@@ -19,11 +19,11 @@ struct ringbuffer{
 
 ringbuffer *create_ring_buff(uint8_t *array, uint8_t size){
 
-	static ringbuffer *rb;
-	rb->buffer = array;
-	rb->size = size;
-	rb->head = 0;
-	rb->tail = 0;
+	static ringbuffer rb;
+	rb.buffer = array;
+	rb.size = size;
+	rb.head = 0;
+	rb.tail = 0;
 	return &rb;
 
 }
@@ -77,6 +77,7 @@ bool full_ring_buff(ringbuffer *rb){
 	return headadd == rb->tail;
 
 }
+
 
 
 
