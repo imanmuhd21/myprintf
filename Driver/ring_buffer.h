@@ -29,5 +29,8 @@ bool empty_ring_buff(ringbuffer * rb);
 
 bool full_ring_buff(ringbuffer *rb);
 
+bool guard_ring_buff(ringbuffer *rb);
+
 #endif /* RING_BUFFER_H_ */
+
 
