@@ -39,7 +39,10 @@ void USART2_IRQHandler(void){
 
 		}
 
-		disable_int();
+		//only disable ISR when tail+1 = head
+		if (guard_ring_buff(tx_buff)){
+			disable_int();
+		}
 	}
 }
 
@@ -323,4 +326,5 @@ void uart_putchar_integer(int n){
 		uart2_putchar_int((char)buff[i]);
 	}
 }
+
 
