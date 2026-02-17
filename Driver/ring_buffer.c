@@ -78,6 +78,15 @@ bool full_ring_buff(ringbuffer *rb){
 
 }
 
+bool guard_ring_buff(ringbuffer *rb){
+	uint8_t tailadd = rb->tail+1;
+
+	if (tailadd == rb->size){
+		tailadd = 0;
+	}
+
+	return tailadd == rb->head;
+}
 
 
 
