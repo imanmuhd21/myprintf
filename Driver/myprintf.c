@@ -48,6 +48,10 @@ void myprintf(char *sr, ...){
 				uart2_putchar_int(sr[i]);
 			}
 		}
+		else if (sr[i] == '\n){
+			uart2_putchar_int('\n');
+			uart2_putchar_int('\r');
+		}
 		else{
 
 			uart2_putchar_int(sr[i]);
@@ -61,3 +65,4 @@ void myprintf(char *sr, ...){
 
 
 #endif /* MYPRINTF_C_ */
+
