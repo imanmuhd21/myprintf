@@ -292,9 +292,6 @@ void uart2_putchar_int(char charw){
 
 	enable_int();
 
-	if (charw == '\n'){
-		uart2_putchar_int('\r');
-	}
 }
 
 void uart_putchar(char *sr){
@@ -326,5 +323,6 @@ void uart_putchar_integer(int n){
 		uart2_putchar_int((char)buff[i]);
 	}
 }
+
 
 
